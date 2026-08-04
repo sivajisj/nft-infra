@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nft-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: indexer_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      POSTGRES_DB: nft_indexer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U indexer_user -d nft_indexer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  indexer:
+    build:
+      context: ./nft-indexer
+      dockerfile: Dockerfile
+    container_name: nft-indexer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://indexer_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/nft_indexer
+      RPC_URL: ${RPC_URL}
+    ports:
+      - "4000:4000"
+
+volumes:
+  postgres_data:

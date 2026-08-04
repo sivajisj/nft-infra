@@ -1,0 +1,5 @@
+nft-frontend/
+nft-indexer/
+nft-minting-subgraph/
+nft-mint-platform/
+.env
